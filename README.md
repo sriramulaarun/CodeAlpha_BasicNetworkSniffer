@@ -95,7 +95,7 @@ To run the server in simulated mode to evaluate the dashboard layout and feature
 ```bash
 python app.py
 ```
-Open **`http://127.0.0.1:5000`** in your browser and click **Start Capture**. You will see a warning banner denoting "Simulation Mode", and mock packets will begin streaming.
+Open **`http://127.0.0.1:5050`** in your browser and click **Start Capture**. You will see a warning banner denoting "Simulation Mode", and mock packets will begin streaming.
 
 ### Option B: Running Live Network Capture (Requires Privileges)
 To bind Scapy to your physical network adapters and sniff live traffic:
@@ -110,7 +110,7 @@ python app.py
 # Linux/macOS
 sudo venv/bin/python app.py
 ```
-Open **`http://127.0.0.1:5000`** and click **Start Capture**. The status badge will display `LIVE (Promiscuous)` and show active network card traffic.
+Open **`http://127.0.0.1:5050`** and click **Start Capture**. The status badge will display `LIVE (Promiscuous)` and show active network card traffic.
 
 ---
 
