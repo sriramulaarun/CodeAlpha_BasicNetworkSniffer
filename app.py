@@ -73,5 +73,7 @@ def get_packets():
     })
 
 if __name__ == '__main__':
-    # Start on default dev port 5050, multi-threaded for simultaneous Flask API hits
-    app.run(host='127.0.0.1', port=5050, debug=True, threaded=True)
+    import os
+    # Bind to 0.0.0.0 for external routing (required for cloud deploy like Railway/Render)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
