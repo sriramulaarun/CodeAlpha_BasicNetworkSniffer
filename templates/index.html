@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis Sniffer // Security Operations Center</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/style.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <!-- Bootstrap 5 CDN replacement directly (to avoid checksum issues, using standard bootstrap) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- FontAwesome for Cyber Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Cyber Styling -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-shield-halved text-cyan pulse-glow"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="logo-title">AEGIS</span>
+                    <span class="logo-subtitle">NET SNIFFER</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" id="nav-dashboard">
+                    <i class="fa-solid fa-gauge-high"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#traffic-analytics" class="nav-item" id="nav-analytics">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="#packet-table" class="nav-item" id="nav-logs">
+                    <i class="fa-solid fa-terminal"></i>
+                    <span>Packet Logs</span>
+                </a>
+                <a href="#system-info" class="nav-item" id="nav-info">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>System Info</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="intern-badge">
+                    <span class="badge-label">CODEALPHA</span>
+                    <span class="badge-role">Cyber Security</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard View -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="dashboard-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="header-title">Security Operations Center <span class="text-cyan">//</span> Network Monitor</h1>
+                    <p class="header-subtitle">Real-time network traffic capture, decoding, and passive threat analysis.</p>
+                </div>
+                
+                <div class="status-indicator-panel">
+                    <span class="status-label">Engine Status:</span>
+                    <div id="status-badge" class="status-badge stopped">
+                        <span class="status-dot"></span>
+                        <span id="status-text" class="status-txt">INACTIVE</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Fallback Alert Banner (Hidden by default, shown if simulation is active) -->
+            <div id="simulation-banner" class="cyber-alert alert-warning d-none" role="alert">
+                <div class="alert-icon">
+                    <i class="fa-solid fa-triangle-exclamation fa-fade"></i>
+                </div>
+                <div class="alert-content">
+                    <h5 class="alert-heading">Simulated Fallback Mode Enabled</h5>
+                    <p class="alert-text">Scapy was unable to bind to raw sockets (requires Administrator privileges and Npcap/WinPcap on Windows). Generating simulated network traffic to demonstrate analyzer capabilities.</p>
+                    <button class="btn btn-xs btn-outline-warning mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#admin-help" aria-expanded="false" aria-controls="admin-help">
+                        How to run with Live Scapy Capture?
+                    </button>
+                    <div class="collapse mt-2" id="admin-help">
+                        <div class="card card-body bg-dark border-warning-subtle text-light p-3 fs-7">
+                            <h6>To capture actual interface traffic:</h6>
+                            <ol class="mb-0 ps-3">
+                                <li>Ensure <a href="https://npcap.com/" target="_blank" class="text-cyan">Npcap</a> is installed (select "Install Npcap in WinPcap API-compatible mode" during setup).</li>
+                                <li>Open your Command Prompt or PowerShell as <strong>Administrator</strong>.</li>
+                                <li>Navigate to this directory and restart: <code>python app.py</code>.</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Metric Cards -->
+            <section class="metrics-row row g-4 mb-4">
+                <!-- Total Packets -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card card-total">
+                        <div class="card-glow"></div>
+                        <div class="metric-content">
+                            <span class="metric-title">TOTAL CAPTURED</span>
+                            <div class="metric-value-container">
+                                <h2 id="stat-total" class="metric-value">0</h2>
+                                <span class="metric-icon"><i class="fa-solid fa-network-wired text-cyan"></i></span>
+                            </div>
+                            <div class="metric-footer">
+                                <span class="text-cyan font-mono" id="stat-pps">0 pps</span>
+                                <span class="metric-desc">current speed</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TCP Packets -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card card-tcp">
+                        <div class="card-glow"></div>
+                        <div class="metric-content">
+                            <span class="metric-title">TCP PROTOCOL</span>
+                            <div class="metric-value-container">
+                                <h2 id="stat-tcp" class="metric-value">0</h2>
+                                <span class="metric-icon"><i class="fa-solid fa-arrow-right-arrow-left text-blue"></i></span>
+                            </div>
+                            <div class="metric-footer">
+                                <span class="text-blue font-mono" id="stat-tcp-pct">0%</span>
+                                <span class="metric-desc">of total traffic</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UDP Packets -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card card-udp">
+                        <div class="card-glow"></div>
+                        <div class="metric-content">
+                            <span class="metric-title">UDP PROTOCOL</span>
+                            <div class="metric-value-container">
+                                <h2 id="stat-udp" class="metric-value">0</h2>
+                                <span class="metric-icon"><i class="fa-solid fa-bolt text-green"></i></span>
+                            </div>
+                            <div class="metric-footer">
+                                <span class="text-green font-mono" id="stat-udp-pct">0%</span>
+                                <span class="metric-desc">of total traffic</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ICMP Packets -->
+                <div class="col-xl-3 col-md-6">
+                    <div class="metric-card card-icmp">
+                        <div class="card-glow"></div>
+                        <div class="metric-content">
+                            <span class="metric-title">ICMP PROTOCOL</span>
+                            <div class="metric-value-container">
+                                <h2 id="stat-icmp" class="metric-value">0</h2>
+                                <span class="metric-icon"><i class="fa-solid fa-triangle-exclamation text-purple"></i></span>
+                            </div>
+                            <div class="metric-footer">
+                                <span class="text-purple font-mono" id="stat-icmp-pct">0%</span>
+                                <span class="metric-desc">diagnostic pings</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sniffer Control Panel -->
+            <section class="controls-card mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center p-3">
+                    <div class="controls-status">
+                        <span class="control-header-text">CONTROLLER BOARD</span>
+                        <div class="d-flex align-items-center gap-3 mt-1">
+                            <span class="small text-muted font-mono" id="active-mode-label">Mode: IDLE</span>
+                            <span class="small text-muted font-mono" id="buffer-size-label">Buffer: 0/1000</span>
+                        </div>
+                    </div>
+                    
+                    <div class="controls-buttons d-flex gap-2">
+                        <button id="btn-start" class="btn btn-cyber btn-cyber-success">
+                            <i class="fa-solid fa-play"></i> Start Capture
+                        </button>
+                        <button id="btn-stop" class="btn btn-cyber btn-cyber-danger" disabled>
+                            <i class="fa-solid fa-pause"></i> Stop Capture
+                        </button>
+                        <button id="btn-clear" class="btn btn-cyber btn-cyber-outline">
+                            <i class="fa-solid fa-trash-can"></i> Clear Logs
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analytics and Charts -->
+            <section class="row g-4 mb-4" id="traffic-analytics">
+                <!-- Protocol Distribution -->
+                <div class="col-lg-5">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fa-solid fa-chart-pie me-2 text-cyan"></i> Protocol Distribution</h3>
+                        </div>
+                        <div class="chart-body d-flex align-items-center justify-content-center">
+                            <div class="chart-container" style="position: relative; height:240px; width:100%">
+                                <canvas id="chart-protocol"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Traffic Volume Bar Chart -->
+                <div class="col-lg-7">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title"><i class="fa-solid fa-chart-line me-2 text-cyan"></i> Traffic Density (Last 30s)</h3>
+                        </div>
+                        <div class="chart-body">
+                            <div class="chart-container" style="position: relative; height:240px; width:100%">
+                                <canvas id="chart-volume"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Monitoring Table -->
+            <section class="packet-logs-card" id="packet-table">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="chart-title"><i class="fa-solid fa-terminal me-2 text-cyan"></i> Live Packet Streams</h3>
+                    <div class="d-flex gap-2">
+                        <select id="filter-protocol" class="form-select form-select-sm cyber-select">
+                            <option value="ALL">All Protocols</option>
+                            <option value="TCP">TCP</option>
+                            <option value="UDP">UDP</option>
+                            <option value="ICMP">ICMP</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <select id="filter-threat" class="form-select form-select-sm cyber-select">
+                            <option value="ALL">All Threat Levels</option>
+                            <option value="Normal">Normal</option>
+                            <option value="Warning">Warning</option>
+                            <option value="Suspicious">Suspicious</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="table-responsive packet-table-container">
+                    <table class="table table-hover cyber-table align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 5%">ID</th>
+                                <th style="width: 12%">Timestamp</th>
+                                <th style="width: 16%">Source IP</th>
+                                <th style="width: 16%">Destination IP</th>
+                                <th style="width: 10%">Protocol</th>
+                                <th style="width: 10%">Size (B)</th>
+                                <th style="width: 21%">Packet Summary</th>
+                                <th style="width: 10%">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="packet-table-body">
+                            <!-- Injected dynamically by JS -->
+                            <tr class="table-placeholder">
+                                <td colspan="8" class="text-center py-4 text-muted font-mono">
+                                    <i class="fa-solid fa-shield-halved fa-beat-fade mb-2 fs-4 text-cyan"></i>
+                                    <p class="mb-0 small">SOCKETS INACTIVE // INITIATE CAPTURE TO STREAM TRAFFIC</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- System Info Footer Section -->
+            <section class="system-info-card mt-4 p-3" id="system-info">
+                <div class="row font-mono text-muted fs-8 align-items-center">
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <i class="fa-solid fa-network-wired text-cyan me-1"></i> Default Interface: <span class="text-light" id="sys-interface">Auto-selected</span>
+                    </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <i class="fa-solid fa-microchip text-cyan me-1"></i> Backend: <span class="text-light">Flask Python v3</span>
+                    </div>
+                    <div class="col-md-3 mb-2 mb-md-0">
+                        <i class="fa-solid fa-database text-cyan me-1"></i> DB Cache: <span class="text-light">Thread-Safe Deque Buffer</span>
+                    </div>
+                    <div class="col-md-3 text-md-end">
+                        <i class="fa-solid fa-code text-cyan me-1"></i> Developed for CodeAlpha Cybersecurity
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 Bundle JS with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js for real-time visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Dashboard Core Control Script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
